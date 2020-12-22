@@ -666,3 +666,41 @@ class MonopolizationView(APIView):
             'line_chart' : final_line_chart_data
         }
         return JsonResponse(result)
+
+
+class ProductTimeline(APIView):
+    def get(self,request):
+        filter_args = {}
+        country =  self.request.GET.get('country',None)
+        if country: filter_args['country__country_code_alpha_2'] = country
+
+        current_time = datetime.datetime.now()
+        previous_month_date = current_time - dateutil.relativedelta.relativedelta(months=1)
+        previous_month = previous_month_date.replace(day=1).date()
+
+        # Month wise average of number of bids for contracts
+        monthwise_data_queryset = Tender.objects.filter(**filter_args).annotate(month=TruncMonth('contract_date'))
+        monthwise_data_contracts = monthwise_data_queryset.values('month').annotate(count=Count('id')).order_by("-month")
+        monthwise_data_suppliers = monthwise_data_queryset.values('month').annotate(count=Count('supplier__id',distinct=True)).order_by("-month")
+        final_line_chart_data = [{'date': monthwise_data_contracts[i]['month'],'value': round(monthwise_data_contracts[i]['count']/monthwise_data_suppliers[i]['count']) if monthwise_data_contracts[i]['count'] and monthwise_data_suppliers[i]['count']  else 0} for i in range(len(monthwise_data_contracts))]
+
+        # Difference percentage calculation
+        try:
+            dates_in_line_chart = [i['date'] for i in final_line_chart_data]
+            final_current_month_avg = [final_line_chart_data[0]['value'] if current_time.replace(day=1).date() in dates_in_line_chart else 0]
+            final_previous_month_avg = [final_line_chart_data[1]['value'] if previous_month in dates_in_line_chart else 0]
+            difference = round((( final_current_month_avg[0] - final_previous_month_avg[0])/final_previous_month_avg[0])*100)
+        except:
+            difference = 0
+
+        # Overall average number of bids for contracts
+        overall_queryset = Tender.objects.filter(**filter_args)
+        overall_contracts = overall_queryset.aggregate(count=Count('id'))
+        overall_suppliers = overall_queryset.aggregate(count=Count('supplier__id',distinct=True))
+
+        result ={
+            'average' : round(overall_contracts['count']/overall_suppliers['count']) if overall_contracts['count'] and overall_suppliers['count'] else 0,
+            'difference' : difference,
+            'line_chart' : final_line_chart_data
+        }
+        return JsonResponse(result)
