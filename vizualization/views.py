@@ -866,33 +866,37 @@ class EquityIndicatorView(APIView):
             country_instance = Country.objects.get(country_code_alpha_2=country)
         except Exception as DoesNotExist:
             data={
-                "by_number": {
-	            "assigned": 64323,
-	            "total": 65106,
-	            "unassigned": 783
-                              },
-                "by_value": {
-	            "assigned": 804213213,
-	            "total": 704434525,
-	            "unassigned": 221312
-                            }
-            }
+                    "amount_local": 32124123,
+                    "amount_usd": 123123,
+                    "tender_count": 3232,
+                    "local_currency_code": "MXN",
+                    "type": "assigned"
+                },
+                {
+                    "amount_local": 213123,
+                    "amount_usd": 23223,
+                    "tender_count": 32,
+                    "local_currency_code": "MXN",
+                    "type": "unassigned"
+                },
+
 
             result.append(data)
             return JsonResponse(result,safe=False)
         if country:
             data={
-                "by_number": {
-	            "assigned": 44323,
-	            "total": 45106,
-	            "unassigned": 783
-                              },
-                "by_value": {
-	            "assigned": 504213213,
-	            "total": 504434525,
-	            "unassigned": 221312
-                            }
-            }
-
+                    "amount_local": 32124123,
+                    "amount_usd": 123123,
+                    "tender_count": 3232,
+                    "local_currency_code": "MXN",
+                    "type": "assigned"
+                },
+                {
+                    "amount_local": 213123,
+                    "amount_usd": 23223,
+                    "tender_count": 32,
+                    "local_currency_code": "MXN",
+                    "type": "unassigned"
+                },
             result.append(data)
             return JsonResponse(result,safe=False)
